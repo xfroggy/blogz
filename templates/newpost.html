@@ -2,17 +2,36 @@
 
 {% block content %}
     <h1>{{title}}</h1>
+
+   
     <form method='post'>
+
+    
         <h2>
         Title for your new blog:
         </h2>
         <input type="text" name='blog-title' />
-        
+        {% with title_errors = get_flashed_messages(category_filter=["title_error"]) %} 
+        {% if title_errors %}
+        {% for title_error in title_errors %}
+            <p class="error">{{title_error}}
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
         <h2>
         Your new blog:
         </h2>
         <textarea rows="4" cols="50" name='blog-body' placeholder ="Type your blog post here."></textarea>
+
+        {% with body_errors = get_flashed_messages(category_filter=["body_error"]) %}                 
+        {% if body_errors%}
+        {% for body_error in body_errors %}
+            <p class="error">{{body_error}}
+        {% endfor %}
+        {% endif %}
         <br>
         <input type="submit" value='Add Entry' />
     </form>
+    {% endwith %}
 {% endblock %}
+

@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -6,6 +6,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:MyNewPass@localhost:8889/build-a-blog'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = 'y337kGcys&zP3B'
 
 
 class Blog(db.Model):
@@ -20,6 +21,7 @@ class Blog(db.Model):
         self.body = body
         self.completed = False
 
+
 @app.route('/')
 def index():
     return redirect('/blog')
@@ -33,17 +35,35 @@ def newpost():
     if request.method == 'POST':
         blog_title = request.form['blog-title']
         blog_body = request.form['blog-body']
-        new_blog = Blog(blog_title, blog_body)
-        db.session.add(new_blog)
-        db.session.commit()
-    return redirect('/blog')    
-    
-@app.route('/blog', methods=['POST', 'GET'])
+        if blog_title == "" or blog_body == "":   
+            if blog_title == "":
+                flash('Please fill in the title', 'title_error')  
+            if blog_body == "":
+                flash('Please fill in the body', 'body_error') 
+            return redirect('/newpost')   
+        else:
+            new_blog = Blog(blog_title, blog_body)
+            db.session.add(new_blog)
+            db.session.commit()
+            return redirect('/blog')  
+
+
+
+@app.route('/blog', methods = ['GET'])
 def blog_index():
     blogs = Blog.query.filter_by(completed=False).all()
-    completed_blogs = Blog.query.filter_by(completed=True).all()
-    return render_template('blog.html',title="Build a Blog", 
-        blogs=blogs, completed_blogss=completed_blogs)
+    completed_blogs = Blog.query.filter_by(completed=True).all()  
+    id = request.args.get("id")
+    blog_post = Blog.query.filter_by(id=id)
+    if id == None:
+        blog_detail = True
+        title="Build a Blog" 
+    else:
+        blog_detail = False    
+        title=""
+    return render_template('blog.html',title=title, blog_detail=blog_detail, blogs=blogs, completed_blogss=completed_blogs, blog_post=blog_post)   
+
+
 
 
 @app.route('/delete-blog', methods=['POST'])
