@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, render_template, flash
 from flask_sqlalchemy import SQLAlchemy
 
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:MyNewPass@localhost:8889/build-a-blog'
@@ -15,6 +16,7 @@ class Blog(db.Model):
     title = db.Column(db.String(120))
     body = db.Column(db.String(600))
     completed = db.Column(db.Boolean)
+
 
     def __init__(self, title, body):
         self.title = title
@@ -45,7 +47,11 @@ def newpost():
             new_blog = Blog(blog_title, blog_body)
             db.session.add(new_blog)
             db.session.commit()
-            return redirect('/blog')  
+            blog_detail = False
+            title = ""
+            return render_template('blog.html',title=title, blog_detail=blog_detail, blog_post =  Blog.query.filter_by(id=new_blog.id).all())   
+
+
 
 
 
@@ -61,7 +67,7 @@ def blog_index():
     else:
         blog_detail = False    
         title=""
-    return render_template('blog.html',title=title, blog_detail=blog_detail, blogs=blogs, completed_blogss=completed_blogs, blog_post=blog_post)   
+    return render_template('blog.html',title=title, blog_detail=blog_detail, blogs=blogs, completed_blogs=completed_blogs, blog_post=blog_post)   
 
 
 
