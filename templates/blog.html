@@ -3,22 +3,37 @@
 {% block content %}
        
 <h1>{{title}}</h1>
-    {% if blog_detail == False %}    
+    {% if blog_detail == False %}    <!-- Why does this work with 'False'? -->
         {% for post in blog_post %}
             <h1>{{post.title}}</h1>
             <hr/>
             <h2>{{post.body}}</h2>
-        {% endfor %}
+            <div class="author">written by<a href='/blog?username={{post.owner.username}}'>{{post.owner.username}}</a></div>
+            {% endfor %}
     
     {% elif blogs|length == 0 %}
         <p>No blogs yet</p>
-    {% else %}
+    {% elif username %}
+            <ul>
+                {% for blog in blogs if username == blog.owner.username %}
 
+                        <h3><a href="/blog?id={{blog.id}}">{{blog.title}}</a></h3>
+                        <h4>{{blog.body}}</h4>
+                        <div class="author">written by<a href='/blog?username={{blog.owner.username}}'>{{blog.owner.username}}</a></div>
+                        <hr/>
+
+                {% endfor %}
+             </ul>
+            
+    {% else %}
             <ul>
                 {% for blog in blogs %}
-                <h3><a href="/blog?id={{blog.id}}">{{blog.title}}</a></h3>
-                <h4>{{blog.body}}</h4>
-                <hr/>
+
+                        <h3><a href="/blog?id={{blog.id}}">{{blog.title}}</a></h3>
+                        <h4>{{blog.body}}</h4>
+                        <div class="author">written by<a href='/blog?username={{blog.owner.username}}'>{{blog.owner.username}}</a></div>
+                        <hr/>
+
                 {% endfor %}
              </ul>
     {% endif %}

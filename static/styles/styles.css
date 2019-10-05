@@ -35,7 +35,7 @@ a:hover {
 
   }   
 
-h3 a {
+h3, .author a {
     color: #eca1a6;
     padding: 16px;
     text-decoration: none;
@@ -43,7 +43,7 @@ h3 a {
     text-transform: lowercase;
 }
 
-h3 a:hover{
+h3, .author a:hover{
 
     text-transform: uppercase;
 }
@@ -60,4 +60,14 @@ p, h4 {
 .error {
     color: red;
     font-style: italic;
+} 
+
+.author {
+    font-family: 'Palatino', serif;
+    font-size: 0.8em;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    line-height: 1.5em;
+    font-style: italic;
+    color: #999999;
 } 
