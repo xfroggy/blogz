@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
+from hashutils import make_pw_hash, check_pw_hash
 
 
 app = Flask(__name__)
@@ -29,67 +30,66 @@ class Blog(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(120))
+    pw_hash = db.Column(db.String(120))
     blogz = db.relationship('Blog', backref = 'owner')
 
     def __init__(self, username, password):
         self.username = username
-        self.password = password
+        self.pw_hash = make_pw_hash(password)
 
 @app.before_request
 def require_login():
     allowed_routes = ['login', 'blog', 'index', 'signup']
     print(session)
     if request.endpoint not in allowed_routes and 'username' not in session:
-        return redirect('/login')
+       return redirect('/login')
 
 
 
-@app.route('/signup')
-def initial_signup():
-    return render_template('signup.html', title="Initial Signup")
 
 @app.route('/signup', methods = ['POST', 'GET'])
 def signup():
-    username = request.form['username']
-    password = request.form['password']
-    verify = request.form['verify']
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        verify = request.form['verify']
 
-    verify_error = ""
-    validator1 = False
-    validator2 = False 
+        verify_error = ""
+        validator1 = False
+        validator2 = False 
 
-    username_error = isValid(username, "Username")
-    if username_error == "":
-        username_error = spaceCheck(username, "Username")
+        username_error = isValid(username, "Username")
+        if username_error == "":
+            username_error = spaceCheck(username, "Username")
     
-    password_error = isValid(password, "Password")
-    if password_error == "":
-        password_error = spaceCheck(password, "Password")
+        password_error = isValid(password, "Password")
+        if password_error == "":
+            password_error = spaceCheck(password, "Password")
 
-    if (not verify) or (verify.strip() == ""):
+        if (not verify) or (verify.strip() == ""):
             verify_error = "Passwords don't match"    
 
-    if  verify != password:
-        verify_error = "Passwords don't match"            
+        if  verify != password:
+            verify_error = "Passwords don't match"            
 
-    if username_error == "" and password_error == "" and verify_error == "":
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            return render_template('signup.html', username_error = "User already exists, please go to login page")
+        if username_error == "" and password_error == "" and verify_error == "":
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                return render_template('signup.html', username_error = "User already exists, please go to login page")
 
-        new_user = User(username, password)
+            new_user = User(username, password)
 
-        db.session.add(new_user)
-        db.session.commit()
-        session['username'] = username
-        return redirect('/newpost')
-  
+            db.session.add(new_user)
+            db.session.commit()
+            session['username'] = username
+            return redirect('/newpost')
 
-    return render_template("signup.html", 
-        username_error=username_error, password_error=password_error, 
-        verify_error=verify_error, 
-        username=username, title="User Sign Up")
+        return render_template("signup.html", 
+            username_error=username_error, password_error=password_error, 
+            verify_error=verify_error, 
+            username=username, title="User Sign Up")
+    else:
+        return render_template('signup.html', title="Initial Signup")
 
 def isValid(item, name):
     if (not item) or (item.strip() == "") or (len(item) < 3) or (len(item) > 19) :
@@ -109,19 +109,18 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if user and user.password == password:
+        if user and check_pw_hash(password, user.pw_hash):
             session['username'] = username
             flash("Logged in")
             return redirect('/newpost')
-        elif user and user.password != password:
-            flash('Username password incorrect', 'error')
-            return redirect('/login')
+        elif user and check_pw_hash(password, user.pw_hash) == False:
+           flash('Password incorrect', 'error')
+           return redirect('/login')
         else:
             flash('Username does not exist', 'error')    
             # TODO - explain why login failed
             #flash('User password incorrect, or user does not exist', 'error')
-        
-
+            return redirect('/login')
 
     return render_template('login.html')    
 
